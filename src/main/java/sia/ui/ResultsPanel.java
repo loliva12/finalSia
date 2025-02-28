@@ -19,40 +19,56 @@ public class ResultsPanel extends JPanel {
 
     public ResultsPanel() {
         setLayout(new BorderLayout());
-        outputArea = new JTextArea(10, 40);
+
+        // Parte de texto (log)
+        outputArea = new JTextArea();
         outputArea.setEditable(false);
-        add(new JScrollPane(outputArea), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(outputArea);
+        scroll.setPreferredSize(new Dimension(400, 150));
+
+        // Parte para el gráfico
         chartContainer = new JPanel(new BorderLayout());
-        chartContainer.setPreferredSize(new Dimension(400, 250));
-        add(chartContainer, BorderLayout.SOUTH);
+
+        // Usamos un JSplitPane para dividir la zona de texto y la zona de gráfico
+        JSplitPane splitPane = new JSplitPane(
+                JSplitPane.VERTICAL_SPLIT,
+                scroll,
+                chartContainer
+        );
+        // Ajustamos cuánto ocupa inicialmente el log (30%) y el gráfico (70%)
+        splitPane.setResizeWeight(0.3);
+
+        add(splitPane, BorderLayout.CENTER);
     }
 
-    public void appendOutput(String text) {
-        outputArea.append(text);
-    }
-
+    // Limpiar el área de texto
     public void clearOutput() {
         outputArea.setText("");
     }
 
+    // Agregar texto al log
+    public void appendOutput(String text) {
+        outputArea.append(text);
+    }
+
+    // Si quieres manipular directamente el JTextArea (por ejemplo, desde AlgoritmoGenetico)
     public JTextArea getOutputArea() {
         return outputArea;
     }
 
-    public void updateChart(List<Double> aptitudes) {
+    // Actualiza el gráfico con la lista de aptitudes
+    public void updateChart(java.util.List<Double> aptitudes) {
         if (aptitudes.isEmpty()) {
             System.out.println("No hay datos para graficar.");
             return;
         }
 
-        // Creamos la serie con los datos
         XYSeries serie = new XYSeries("Mejor Aptitud por Generación");
         for (int i = 0; i < aptitudes.size(); i++) {
-            double valor = aptitudes.get(i); // Aquí NO escalamos
+            double valor = aptitudes.get(i);
             serie.add(i, valor);
         }
 
-        // Armamos el dataset
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(serie);
 
@@ -63,19 +79,18 @@ public class ResultsPanel extends JPanel {
                 "Mejor Aptitud",
                 dataset,
                 PlotOrientation.VERTICAL,
-                true,  // leyenda
-                true,  // tooltips
+                true,  // Leyenda
+                true,  // Tooltips
                 false  // URLs
         );
 
-        // Ajustamos el rango del eje Y para que se vea de 0 a 1 (o 1.1)
+        // Ajustar el rango del eje Y, si tu aptitud va de 0 a 1
         NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setRange(0.0, 1.1);
 
-        // Agregamos el chart al panel
+        // Ponemos el chart en un ChartPanel y lo metemos en chartContainer
         ChartPanel cp = new ChartPanel(chart);
         chartContainer.removeAll();
-        chartContainer.setLayout(new BorderLayout());
         chartContainer.add(cp, BorderLayout.CENTER);
         chartContainer.revalidate();
         chartContainer.repaint();

@@ -29,7 +29,7 @@ public class ConfigurationPanel extends JPanel {
     private JPanel createInputPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5,5,5,5);
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         int row = 0;
 
@@ -109,9 +109,10 @@ public class ConfigurationPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 2;
         panel.add(new JLabel("Productos Disponibles:"), gbc);
         row++;
+
         productosModel = new DefaultListModel<>();
         listaProductos = new JList<>(productosModel);
-        // Se inicializa con los productos de AlgoritmoGenetico
+        // Inicializa con los productos globales de AlgoritmoGenetico
         for (Producto p : AlgoritmoGenetico.getProductos()) {
             productosModel.addElement(p);
         }
@@ -193,7 +194,8 @@ public class ConfigurationPanel extends JPanel {
             String opMutacion = (String) cbMutacion.getSelectedItem();
 
             ExecutionParameters params = new ExecutionParameters(
-                    generaciones, tamPoblacion, probCruce, probMutacion, maxPeso, opSeleccion, opCruza, opMutacion
+                    generaciones, tamPoblacion, probCruce, probMutacion, maxPeso,
+                    opSeleccion, opCruza, opMutacion
             );
             if (executionListener != null) {
                 executionListener.execute(params);

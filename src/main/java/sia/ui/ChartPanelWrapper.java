@@ -13,25 +13,31 @@ import java.awt.*;
 import java.util.List;
 
 public class ChartPanelWrapper  extends JPanel {
-    private ChartPanel chartPanel; // de JFreeChart
+    private ChartPanel chartPanel;
 
     public ChartPanelWrapper() {
         setLayout(new BorderLayout());
-        // Podrías inicializar un chart vacío al inicio
-        JFreeChart emptyChart = ChartFactory.createXYLineChart(
+        // Inicializa con un gráfico vacío
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        JFreeChart chart = ChartFactory.createXYLineChart(
                 "Evolución de la Aptitud",
                 "Generación",
                 "Aptitud",
-                new XYSeriesCollection(),
+                dataset,
                 PlotOrientation.VERTICAL,
                 true, true, false
         );
-        chartPanel = new ChartPanel(emptyChart);
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setRange(0.0, 1.1);
+        chartPanel = new ChartPanel(chart);
         add(chartPanel, BorderLayout.CENTER);
     }
 
     public void updateChart(List<Double> aptitudes) {
-        if (aptitudes.isEmpty()) return;
+        if (aptitudes.isEmpty()) {
+            System.out.println("No hay datos para graficar.");
+            return;
+        }
 
         XYSeries serie = new XYSeries("Mejor Aptitud por Generación");
         for (int i = 0; i < aptitudes.size(); i++) {
@@ -46,15 +52,10 @@ public class ChartPanelWrapper  extends JPanel {
                 "Aptitud",
                 dataset,
                 PlotOrientation.VERTICAL,
-                true,  // Leyenda
-                true,  // Tooltips
-                false  // URLs
+                true, true, false
         );
-
-        // Ajustar eje Y para que vaya de 0..1.1, si tu aptitud está en [0..1]
         NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setRange(0.0, 1.1);
-
         chartPanel.setChart(chart);
     }
 }

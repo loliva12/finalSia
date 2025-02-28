@@ -42,6 +42,10 @@ public class Individuo {
         return productos;
     }
 
+    public double getPesoTotal() {
+        return pesoTotal;
+    }
+
     public void recalcularPeso() {
         this.pesoTotal = calcularPesoTotal();
     }

@@ -3,65 +3,82 @@ package sia.ui;
 import sia.cerebro.AlgoritmoGenetico;
 import sia.modelo.ExecutionListener;
 import sia.modelo.ExecutionParameters;
+import sia.modelo.Individuo;
+import sia.modelo.ResultadoEjecucion;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class DroneOptimizationUI {
     private JFrame frame;
     private ConfigurationPanel configPanel;
-    private ResultsPanel resultsPanel;
+    private LogPanel logPanel;
+    private ChartPanelWrapper chartPanel;
 
     public DroneOptimizationUI() {
         configPanel = new ConfigurationPanel();
-        resultsPanel = new ResultsPanel();
+        logPanel = new LogPanel();
+        chartPanel = new ChartPanelWrapper();
 
-        // Se asigna el listener para ejecutar el algoritmo
-        configPanel.setExecutionListener(new ExecutionListener() {
-            @Override
-            public void execute(ExecutionParameters params) {
-                resultsPanel.clearOutput();
-                resultsPanel.appendOutput("Ejecutando AG con:\n");
-                resultsPanel.appendOutput("Generaciones: " + params.getGeneraciones() + "\n");
-                resultsPanel.appendOutput("Población: " + params.getTamPoblacion() + "\n");
-                resultsPanel.appendOutput("Prob. Cruce: " + params.getProbCruce() + "\n");
-                resultsPanel.appendOutput("Prob. Mutación: " + params.getProbMutacion() + "\n");
-                resultsPanel.appendOutput("Capacidad Dron: " + params.getMaxPeso() + " Kg\n");
-                resultsPanel.appendOutput("Operador Selección: " + params.getOpSeleccion() + "\n");
-                resultsPanel.appendOutput("Operador Cruce: " + params.getOpCruza() + "\n");
-                resultsPanel.appendOutput("Operador Mutación: " + params.getOpMutacion() + "\n\n");
+        // Configuramos el listener de ejecución
+        configPanel.setExecutionListener(params -> {
+            // Limpiar log antes de iniciar
+            logPanel.clearLog();
 
-                // Se ejecuta el algoritmo en un hilo aparte para no bloquear la UI
-                new Thread(() -> {
-                    java.util.List<Double> fitnessHistory = AlgoritmoGenetico.ejecutarAlgoritmo(
-                            params.getGeneraciones(),
-                            params.getTamPoblacion(),
-                            params.getProbCruce(),
-                            params.getProbMutacion(),
-                            params.getOpSeleccion(),
-                            params.getOpCruza(),
-                            params.getOpMutacion(),
-                            resultsPanel.getOutputArea()
-                    );
-                    SwingUtilities.invokeLater(() -> {
-                        resultsPanel.updateChart(fitnessHistory);
-                    });
-                }).start();
-            }
+            // Mostrar parámetros de ejecución
+            logPanel.appendLog("Ejecutando AG con:\n");
+            logPanel.appendLog("Generaciones: " + params.getGeneraciones() + "\n");
+            logPanel.appendLog("Población: " + params.getTamPoblacion() + "\n");
+            logPanel.appendLog("Prob. Cruce: " + params.getProbCruce() + "\n");
+            logPanel.appendLog("Prob. Mutación: " + params.getProbMutacion() + "\n");
+            logPanel.appendLog("Capacidad Dron: " + params.getMaxPeso() + " Kg\n");
+            logPanel.appendLog("Operador Selección: " + params.getOpSeleccion() + "\n");
+            logPanel.appendLog("Operador Cruce: " + params.getOpCruza() + "\n");
+            logPanel.appendLog("Operador Mutación: " + params.getOpMutacion() + "\n\n");
+
+            // Ejecutar el algoritmo en un hilo aparte
+            new Thread(() -> {
+                ResultadoEjecucion resultado = AlgoritmoGenetico.ejecutarAlgoritmo(
+                        params.getGeneraciones(),
+                        params.getTamPoblacion(),
+                        params.getProbCruce(),
+                        params.getProbMutacion(),
+                        params.getOpSeleccion(),
+                        params.getOpCruza(),
+                        params.getOpMutacion(),
+                        logPanel.getLogArea()  // Para ir imprimiendo en el log
+                );
+
+                // Imprimir detalles del mejor individuo final
+                Individuo mejor = resultado.getMejorIndividuoFinal();
+                logPanel.appendLog("\nMejor Individual Final:\n");
+                logPanel.appendLog("Aptitud: " + mejor.calcularAptitud() + "\n");
+                logPanel.appendLog("Peso Total: " + mejor.getPesoTotal() + "\n");
+                logPanel.appendLog("Productos: " + mejor.getProductos().toString() + "\n");
+
+                // Actualizamos el gráfico en el hilo EDT
+                SwingUtilities.invokeLater(() -> {
+                    chartPanel.updateChart(resultado.getFitnessHistory());
+                });
+            }).start();
         });
     }
 
     public void createAndShowUI() {
         frame = new JFrame("Optimización de Envío de Pedidos - Algoritmo Genético");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
+        frame.setSize(900, 600);
         frame.setLocationRelativeTo(null);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Configuración", configPanel);
-        tabbedPane.addTab("Resultados", resultsPanel);
+        tabbedPane.addTab("Log", logPanel);
+        tabbedPane.addTab("Gráfico", chartPanel);
 
-        frame.add(tabbedPane);
+        frame.add(tabbedPane, BorderLayout.CENTER);
         frame.setVisible(true);
     }
 }
