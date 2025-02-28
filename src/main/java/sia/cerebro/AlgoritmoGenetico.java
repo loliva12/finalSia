@@ -48,12 +48,12 @@ public class AlgoritmoGenetico {
 
     public static List<Double> ejecutarAlgoritmo(int generaciones, int tamPoblacion, double probCruce, double probMutacion,
                                                  String opSeleccion, String opCruza, String opMutacion, JTextArea outputArea) {
-        // Genera la población inicial
+        // 1. Genera la población inicial
         List<Individuo> poblacion = generarPoblacionInicial(tamPoblacion);
         List<Double> historialAptitud = new ArrayList<>();
         Random rand = new Random();
 
-        // Aquí seleccionas tus operadores según parámetros (no se muestra la parte completa)
+        // 2. Elige los operadores según los parámetros
         Seleccion seleccion = (opSeleccion.equalsIgnoreCase("Torneo"))
                 ? new SeleccionTorneo()
                 : new SeleccionRuleta();
@@ -64,28 +64,54 @@ public class AlgoritmoGenetico {
                 ? new MutacionBit()
                 : new MutacionSwap();
 
+        // 3. Itera por cada generación
         for (int gen = 0; gen < generaciones; gen++) {
+
+            // 3.1 Encuentra el mejor individuo (mayor aptitud) de la población actual
+            Individuo mejorIndividuo = Collections.max(
+                    poblacion,
+                    Comparator.comparingDouble(Individuo::calcularAptitud)
+            );
+
+            // 3.2 Crea la nueva población e incluye al mejor como élite
             List<Individuo> nuevaPoblacion = new ArrayList<>();
+            // Clonamos al mejor para no modificar el objeto original
+            Individuo clonMejor = new Individuo(mejorIndividuo.getProductos());
+            nuevaPoblacion.add(clonMejor);
+
+            // 3.3 Genera el resto de la nueva población mediante selección, cruza y mutación
             while (nuevaPoblacion.size() < tamPoblacion) {
+                // Selección: padre y madre (tú usas Torneo + Ruleta)
                 Individuo padre = seleccion.seleccionar(poblacion, 3);
                 Individuo madre = seleccion.seleccionarRuleta(poblacion);
                 if (madre == null) {
                     madre = padre;
                 }
+
+                // Cruza con probabilidad probCruce
                 Individuo hijo;
                 if (rand.nextDouble() < probCruce) {
-                    hijo = (rand.nextBoolean()) ? cruza.cruzar(padre, madre) : cruza.cruzar(madre, padre);
+                    // Alternas quién es "padre" y quién es "madre" en la cruza
+                    hijo = (rand.nextBoolean())
+                            ? cruza.cruzar(padre, madre)
+                            : cruza.cruzar(madre, padre);
                 } else {
+                    // Si no hay cruza, se clona a la madre (o padre)
                     hijo = new Individuo(madre.getProductos());
                 }
+
+                // Mutación con probMutacion
                 if (rand.nextDouble() < probMutacion) {
                     mutacion.mutar(hijo);
                 }
+
                 nuevaPoblacion.add(hijo);
             }
+
+            // 3.4 Reemplazamos la población anterior por la nueva
             poblacion = nuevaPoblacion;
 
-            // Seleccionamos el mejor individuo (mayor aptitud es mejor)
+            // 3.5 Seleccionamos el mejor individuo de la nueva población (para registrar su aptitud)
             double mejorAptitud = 0;
             for (Individuo ind : poblacion) {
                 double apt = ind.calcularAptitud();
@@ -94,8 +120,12 @@ public class AlgoritmoGenetico {
                 }
             }
             historialAptitud.add(mejorAptitud);
+
+            // 3.6 Imprimimos en el JTextArea
             outputArea.append("Generación " + gen + " - Mejor aptitud: " + mejorAptitud + "\n");
         }
+
+        // 4. Retornamos el historial de aptitudes
         return historialAptitud;
     }
 

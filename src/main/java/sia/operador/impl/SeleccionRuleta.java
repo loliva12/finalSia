@@ -13,6 +13,7 @@ import java.util.Random;
 
 public class SeleccionRuleta implements Seleccion {
     private Random rand = new Random();
+
     @Override
     public Individuo seleccionar(List<Individuo> poblacion, int tamTorneo) {
         return seleccionarRuleta(poblacion);
@@ -21,13 +22,14 @@ public class SeleccionRuleta implements Seleccion {
     @Override
     public Individuo seleccionarRuleta(List<Individuo> poblacion) {
         double totalFitness = 0.0;
+        // Sumar la aptitud directamente (no su inversa)
         for (Individuo ind : poblacion) {
-            totalFitness += (1.0 / ind.calcularAptitud());
+            totalFitness += ind.calcularAptitud();
         }
         double randVal = rand.nextDouble() * totalFitness;
         double sum = 0;
         for (Individuo ind : poblacion) {
-            sum += (1.0 / ind.calcularAptitud());
+            sum += ind.calcularAptitud();
             if (sum >= randVal) {
                 return ind;
             }

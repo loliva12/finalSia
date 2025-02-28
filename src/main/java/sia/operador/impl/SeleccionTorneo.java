@@ -20,7 +20,7 @@ public class SeleccionTorneo implements Seleccion { // Agregado "public"
         for (int i = 0; i < tamTorneo; i++) {
             int idx = rand.nextInt(n);
             Individuo cand = poblacion.get(idx);
-            if (best == null || cand.calcularAptitud() < best.calcularAptitud()) {
+            if (best == null || cand.calcularAptitud() > best.calcularAptitud()) {
                 best = cand;
             }
         }

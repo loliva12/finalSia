@@ -20,16 +20,29 @@ public class CruzaPunto implements Cruza {
     public Individuo cruzar(Individuo padre, Individuo madre) {
         List<Producto> productosPadre = padre.getProductos();
         List<Producto> productosMadre = madre.getProductos();
-        int size = Math.min(productosPadre.size(), productosMadre.size());
-        if (size == 0) return padre;
-        int punto = rand.nextInt(size);
+
+        // Usamos la longitud mínima para evitar índices fuera de rango
+        int minSize = Math.min(productosPadre.size(), productosMadre.size());
+        if (minSize == 0) {
+            // Si alguno de los padres no tiene genes, retornamos una copia del padre
+            return new Individuo(new ArrayList<>(productosPadre));
+        }
+
+        // Se permite el cruce en cualquier punto entre 0 y minSize (incluyendo los extremos)
+        int punto = rand.nextInt(minSize + 1);  // +1 para permitir cruce al inicio o al final
+
         List<Producto> hijoProductos = new ArrayList<>();
+
+        // Copiamos desde el padre desde el inicio hasta el punto de cruce (excluido)
         for (int i = 0; i < punto; i++) {
             hijoProductos.add(productosPadre.get(i));
         }
-        for (int i = punto; i < productosMadre.size(); i++) {
+
+        // Copiamos desde la madre desde el punto de cruce hasta el final (hasta minSize)
+        for (int i = punto; i < minSize; i++) {
             hijoProductos.add(productosMadre.get(i));
         }
+
         return new Individuo(hijoProductos);
     }
 }

@@ -19,8 +19,12 @@ public class MutacionSwap implements Mutacion {
         List<Producto> productos = individuo.getProductos();
         Random rand = new Random();
         if (productos.size() < 2) return;
+
         int idx1 = rand.nextInt(productos.size());
         int idx2 = rand.nextInt(productos.size());
         Collections.swap(productos, idx1, idx2);
+
+        // Después del swap, recalculamos el peso total:
+        individuo.recalcularPeso();
     }
 }

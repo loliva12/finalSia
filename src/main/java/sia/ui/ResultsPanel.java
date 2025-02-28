@@ -4,6 +4,7 @@ package sia.ui;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -44,35 +45,34 @@ public class ResultsPanel extends JPanel {
             return;
         }
 
-        // Definimos un valor máximo para la visualización (ajústalo según lo que esperes)
-        double maxVisual = 100.0;
-
+        // Creamos la serie con los datos
         XYSeries serie = new XYSeries("Mejor Aptitud por Generación");
         for (int i = 0; i < aptitudes.size(); i++) {
-            double valor = aptitudes.get(i);
-            // Si el valor no es finito o es mayor al umbral, lo recortamos
-            if (!Double.isFinite(valor) || valor > maxVisual) {
-                valor = maxVisual;
-            }
+            double valor = aptitudes.get(i); // Aquí NO escalamos
             serie.add(i, valor);
         }
 
+        // Armamos el dataset
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(serie);
 
+        // Construimos el chart
         JFreeChart chart = ChartFactory.createXYLineChart(
                 "Evolución de la Aptitud",
                 "Generación",
                 "Mejor Aptitud",
                 dataset,
                 PlotOrientation.VERTICAL,
-                true, true, false
+                true,  // leyenda
+                true,  // tooltips
+                false  // URLs
         );
 
-        // Fijar manualmente el rango del eje Y para evitar valores extremos
-        org.jfree.chart.axis.NumberAxis rangeAxis = (org.jfree.chart.axis.NumberAxis) chart.getXYPlot().getRangeAxis();
-        rangeAxis.setRange(0, maxVisual + 10); // Por ejemplo, de 0 a 110
+        // Ajustamos el rango del eje Y para que se vea de 0 a 1 (o 1.1)
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setRange(0.0, 1.1);
 
+        // Agregamos el chart al panel
         ChartPanel cp = new ChartPanel(chart);
         chartContainer.removeAll();
         chartContainer.setLayout(new BorderLayout());

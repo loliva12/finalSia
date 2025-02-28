@@ -42,6 +42,10 @@ public class Individuo {
         return productos;
     }
 
+    public void recalcularPeso() {
+        this.pesoTotal = calcularPesoTotal();
+    }
+
     @Override
     public String toString() {
         return "Individuo: " + productos.toString() + " - Peso total: " + pesoTotal + " kg - Aptitud: " + calcularAptitud();

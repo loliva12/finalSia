@@ -21,13 +21,16 @@ public class MutacionBit implements Mutacion {
     public void mutar(Individuo ind) {
         List<Producto> productos = ind.getProductos();
         if (productos.isEmpty() || rand.nextBoolean()) {
-            // Agrega un producto aleatorio
+            // Agrega un producto aleatorio de la lista completa
             List<Producto> allProducts = AlgoritmoGenetico.getProductos();
             Producto randomProduct = allProducts.get(rand.nextInt(allProducts.size()));
             productos.add(randomProduct);
         } else {
+            // Remueve un producto aleatorio
             int index = rand.nextInt(productos.size());
             productos.remove(index);
         }
+        // Actualiza el peso total luego de la mutación
+        ind.recalcularPeso();
     }
 }
