@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
+.idea/
 .idea/modules.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
@@ -36,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Archivos de logs y temporales
+*.log
+*.tmp
+
+# Otros archivos y carpetas que pueden generarse
+Thumbs.db

@@ -1,6 +1,6 @@
 package sia.operador;
 
-import sia.Individuo;
+import sia.modelo.Individuo;
 
 public interface Cruza {
     Individuo cruzar(Individuo padre, Individuo madre);

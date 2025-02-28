@@ -1,9 +1,11 @@
 package sia.operador.impl;
 
-import sia.Individuo;
+import sia.modelo.Individuo;
+import sia.modelo.Producto;
 import sia.operador.Mutacion;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 /*
@@ -11,13 +13,14 @@ import java.util.Random;
  * */
 
 public class MutacionSwap implements Mutacion {
+
     @Override
     public void mutar(Individuo individuo) {
+        List<Producto> productos = individuo.getProductos();
         Random rand = new Random();
-        if (individuo.productos.size() > 1) {
-            int idx1 = rand.nextInt(individuo.productos.size());
-            int idx2 = rand.nextInt(individuo.productos.size());
-            Collections.swap(individuo.productos, idx1, idx2);
-        }
+        if (productos.size() < 2) return;
+        int idx1 = rand.nextInt(productos.size());
+        int idx2 = rand.nextInt(productos.size());
+        Collections.swap(productos, idx1, idx2);
     }
 }

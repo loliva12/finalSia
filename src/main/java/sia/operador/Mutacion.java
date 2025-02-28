@@ -1,6 +1,6 @@
 package sia.operador;
 
-import sia.Individuo;
+import sia.modelo.Individuo;
 
 // Interfaz para Mutación
 public interface Mutacion {

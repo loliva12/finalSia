@@ -1,7 +1,7 @@
 package sia.operador.impl;
 
-import sia.Individuo;
-import sia.Producto;
+import sia.modelo.Individuo;
+import sia.modelo.Producto;
 import sia.operador.Cruza;
 
 import java.util.ArrayList;
@@ -14,18 +14,22 @@ import java.util.Random;
  * */
 
 public class CruzaPunto implements Cruza {
+    private Random rand = new Random();
+
     @Override
     public Individuo cruzar(Individuo padre, Individuo madre) {
-        Random random = new Random();
-        int maxPunto = Math.min(padre.productos.size(), madre.productos.size());
-
-        if (maxPunto == 0) {
-            return new Individuo(new ArrayList<>());
+        List<Producto> productosPadre = padre.getProductos();
+        List<Producto> productosMadre = madre.getProductos();
+        int size = Math.min(productosPadre.size(), productosMadre.size());
+        if (size == 0) return padre;
+        int punto = rand.nextInt(size);
+        List<Producto> hijoProductos = new ArrayList<>();
+        for (int i = 0; i < punto; i++) {
+            hijoProductos.add(productosPadre.get(i));
         }
-
-        int punto = random.nextInt(maxPunto);
-        List<Producto> hijos = new ArrayList<>(padre.productos.subList(0, punto));
-        hijos.addAll(madre.productos.subList(punto, madre.productos.size()));
-        return new Individuo(hijos);
+        for (int i = punto; i < productosMadre.size(); i++) {
+            hijoProductos.add(productosMadre.get(i));
+        }
+        return new Individuo(hijoProductos);
     }
 }

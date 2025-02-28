@@ -1,4 +1,4 @@
-package sia;
+package sia.modelo;
 
 
 //representa el gen

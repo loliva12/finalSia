@@ -1,9 +1,10 @@
 package sia.operador.impl;
 
-import sia.Individuo;
+import sia.modelo.Individuo;
 import sia.operador.Seleccion;
 
 import java.util.List;
+import java.util.Random;
 
 /*
  * los individuos con mayor aptitud (fitness) tienen una mayor probabilidad de ser seleccionados,
@@ -11,20 +12,24 @@ import java.util.List;
  * */
 
 public class SeleccionRuleta implements Seleccion {
-
+    private Random rand = new Random();
     @Override
-    public Individuo seleccionar(List<Individuo> poblacion, int tamPoblacion) {
+    public Individuo seleccionar(List<Individuo> poblacion, int tamTorneo) {
         return seleccionarRuleta(poblacion);
     }
+
     @Override
     public Individuo seleccionarRuleta(List<Individuo> poblacion) {
-        double sumaAptitud = poblacion.stream().mapToDouble(Individuo::calcularAptitud).sum();
-        double valorSeleccion = Math.random() * sumaAptitud;
-        double count = 0;
-        for (Individuo i : poblacion) {
-            count += i.calcularAptitud();
-            if (count >= valorSeleccion) {
-                return i;
+        double totalFitness = 0.0;
+        for (Individuo ind : poblacion) {
+            totalFitness += (1.0 / ind.calcularAptitud());
+        }
+        double randVal = rand.nextDouble() * totalFitness;
+        double sum = 0;
+        for (Individuo ind : poblacion) {
+            sum += (1.0 / ind.calcularAptitud());
+            if (sum >= randVal) {
+                return ind;
             }
         }
         return poblacion.get(poblacion.size() - 1);

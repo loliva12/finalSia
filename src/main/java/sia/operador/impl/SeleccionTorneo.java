@@ -1,6 +1,6 @@
 package sia.operador.impl;
 
-import sia.Individuo;
+import sia.modelo.Individuo;
 import sia.operador.Seleccion;
 
 import java.util.List;
@@ -11,22 +11,19 @@ import java.util.Random;
  * El ganador del torneo (mayor aptitud) es seleccionado para el cruzamiento.
  */
 public class SeleccionTorneo implements Seleccion { // Agregado "public"
-    @Override
-    public Individuo seleccionarRuleta(List<Individuo> poblacion) {
-        int tamTorneo = 3;
-        return seleccionar(poblacion, tamTorneo);
-    }
+    private Random rand = new Random();
 
     @Override
     public Individuo seleccionar(List<Individuo> poblacion, int tamTorneo) {
-        Random random = new Random();
-        Individuo ganador = null;
+        int n = poblacion.size();
+        Individuo best = null;
         for (int i = 0; i < tamTorneo; i++) {
-            Individuo candidato = poblacion.get(random.nextInt(poblacion.size()));
-            if (ganador == null || candidato.calcularAptitud() < ganador.calcularAptitud()) {
-                ganador = candidato;
+            int idx = rand.nextInt(n);
+            Individuo cand = poblacion.get(idx);
+            if (best == null || cand.calcularAptitud() < best.calcularAptitud()) {
+                best = cand;
             }
         }
-        return ganador;
+        return best;
     }
 }
