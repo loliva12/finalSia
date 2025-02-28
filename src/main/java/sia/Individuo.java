@@ -2,9 +2,10 @@ package sia;
 import java.util.ArrayList;
 import java.util.List;
 
+// representa un cromosoma
 // representa un subconjunto de productos
 public class Individuo {
-    List<Producto> productos;
+    public List<Producto> productos;
     double pesoTotal;
 
     public Individuo(List<Producto> productos) {

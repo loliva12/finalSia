@@ -1,47 +1,202 @@
 package sia;
 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.List;
+import javax.swing.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
+import sia.operador.Cruza;
+import sia.operador.Mutacion;
+import sia.operador.Seleccion;
+import sia.operador.impl.*;
 
 import static sia.AlgoritmoGenetico.*;
-import javax.swing.*;
-
 
 public class Main {
+    private static JTextArea outputArea;
+    private static JTextField txtGeneraciones, txtTamPoblacion, txtProbCruce, txtProbMutacion;
+    private static DefaultListModel<Producto> productosModel;
+    private static JList<Producto> listaProductos;
+    private static JTextField txtNombreProducto, txtPesoProducto;
+
     public static void main(String[] args) {
-        List<Individuo> poblacion = generarPoblacionInicial();
-        List<Double> historialAptitud = new ArrayList<>(); // Guardamos las mejores aptitudes
+        SwingUtilities.invokeLater(Main::crearInterfaz);
+    }
 
-        for (int gen = 0; gen < GENERACIONES; gen++) {
+    private static void crearInterfaz() {
+        JFrame frame = new JFrame("Configuración Algoritmo Genético");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 600);
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
+        panel.add(new JLabel("Generaciones (Cantidad de iteraciones):"), gbc);
+        gbc.gridx = 1;
+        txtGeneraciones = new JTextField("100", 10);
+        panel.add(txtGeneraciones, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Tamaño de Población (Número de individuos en cada generación):"), gbc);
+        gbc.gridx = 1;
+        txtTamPoblacion = new JTextField("50", 10);
+        panel.add(txtTamPoblacion, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Probabilidad de Cruce (Ej: 0.7 para 70% de cruce):"), gbc);
+        gbc.gridx = 1;
+        txtProbCruce = new JTextField("0.7", 10);
+        panel.add(txtProbCruce, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Probabilidad de Mutación (Ej: 0.1 para 10% de mutación):"), gbc);
+        gbc.gridx = 1;
+        txtProbMutacion = new JTextField("0.1", 10);
+        panel.add(txtProbMutacion, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        panel.add(new JLabel("Productos disponibles:"), gbc);
+
+        productosModel = new DefaultListModel<>();
+        listaProductos = new JList<>(productosModel);
+
+        for (Producto p : AlgoritmoGenetico.productos) {
+            productosModel.addElement(p);
+        }
+
+        JScrollPane scrollProductos = new JScrollPane(listaProductos);
+        scrollProductos.setPreferredSize(new Dimension(200, 100));
+        gbc.gridy++;
+        panel.add(scrollProductos, gbc);
+
+        JPanel panelProducto = new JPanel(new FlowLayout());
+        panelProducto.add(new JLabel("Nombre del Producto:"));
+        txtNombreProducto = new JTextField(10);
+        panelProducto.add(txtNombreProducto);
+
+        panelProducto.add(new JLabel("Peso del Producto (kg):"));
+        txtPesoProducto = new JTextField(5);
+        panelProducto.add(txtPesoProducto);
+
+        JButton btnAgregarProducto = new JButton("Agregar");
+        JButton btnEliminarProducto = new JButton("Eliminar");
+        JButton btnVerProductos = new JButton("Ver Productos");
+        panelProducto.add(btnAgregarProducto);
+        panelProducto.add(btnEliminarProducto);
+        panelProducto.add(btnVerProductos);
+        panelProducto.add(btnVerProductos);
+        gbc.gridy++;
+        panel.add(panelProducto, gbc);
+
+        JButton btnEjecutar = new JButton("Ejecutar");
+        gbc.gridy++;
+        panel.add(btnEjecutar, gbc);
+
+        outputArea = new JTextArea(10, 40);
+        outputArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(outputArea);
+        frame.add(panel, BorderLayout.NORTH);
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        btnAgregarProducto.addActionListener(e -> agregarProducto());
+        btnEliminarProducto.addActionListener(e -> eliminarProducto());
+        btnVerProductos.addActionListener(e -> verProductos());
+        btnEjecutar.addActionListener(e -> ejecutarAlgoritmo());
+
+        frame.setVisible(true);
+    }
+
+
+    private static void eliminarProducto() {
+        int selectedIndex = listaProductos.getSelectedIndex();
+        if (selectedIndex != -1) {
+            productosModel.remove(selectedIndex);
+        } else {
+            JOptionPane.showMessageDialog(null, "Seleccione un producto para eliminar", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static void verProductos() {
+        if (productosModel.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No hay productos en la lista", "Información", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        StringBuilder productos = new StringBuilder("Lista de Productos:\n");
+        for (int i = 0; i < productosModel.getSize(); i++) {
+            productos.append(productosModel.getElementAt(i).toString()).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, productos.toString(), "Productos", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private static void agregarProducto() {
+        String nombre = txtNombreProducto.getText();
+        double peso;
+        try {
+            peso = Double.parseDouble(txtPesoProducto.getText());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Peso inválido", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        productosModel.addElement(new Producto(nombre, peso));
+    }
+
+    private static void ejecutarAlgoritmo() {
+        int generaciones = Integer.parseInt(txtGeneraciones.getText());
+        int tamPoblacion = Integer.parseInt(txtTamPoblacion.getText());
+        double probCruce = Double.parseDouble(txtProbCruce.getText());
+        double probMutacion = Double.parseDouble(txtProbMutacion.getText());
+
+        List<Individuo> poblacion = generarPoblacionInicial(tamPoblacion);
+        List<Double> historialAptitud = new ArrayList<>();
+
+        Seleccion seleccionTorneo = new SeleccionTorneo();
+        Seleccion seleccionRuleta = new SeleccionRuleta();
+        Cruza cruzaPunto = new CruzaPunto();
+        Cruza cruzaUniforme = new CruzaUniforme();
+        Mutacion mutacionBit = new MutacionBit();
+        Mutacion mutacionSwap = new MutacionSwap();
+
+        for (int gen = 0; gen < generaciones; gen++) {
             List<Individuo> nuevaPoblacion = new ArrayList<>();
-            while (nuevaPoblacion.size() < TAM_POBLACION) {
+            while (nuevaPoblacion.size() < tamPoblacion) {
                 int tamTorneo = 3;
-                Individuo padre = seleccionTorneo(poblacion, tamTorneo);
-                Individuo madre = seleccionRuleta(poblacion);
+                Individuo padre = seleccionTorneo.seleccionar(poblacion, tamTorneo);
+                Individuo madre = seleccionRuleta.seleccionarRuleta(poblacion);
 
-                if (Math.random() < PROB_CRUCE) {
+                if (Math.random() < probCruce) {
                     Individuo hijo;
                     if (Math.random() < 0.5) {
-                        hijo = crucePunto(padre, madre);
+                        hijo = cruzaPunto.cruzar(padre, madre);
                     } else {
-                        hijo = cruceUniforme(padre, madre);
+                        hijo = cruzaUniforme.cruzar(padre, madre);
                     }
                     nuevaPoblacion.add(hijo);
                 } else {
                     nuevaPoblacion.add(madre);
                 }
 
-                if (Math.random() < PROB_MUTACION) {
+                if (Math.random() < probMutacion) {
                     if (Math.random() < 0.5) {
-                        mutacionBit(nuevaPoblacion.get(nuevaPoblacion.size() - 1));
+                        mutacionBit.mutar(nuevaPoblacion.get(nuevaPoblacion.size() - 1));
                     } else {
-                        mutacionSwap(nuevaPoblacion.get(nuevaPoblacion.size() - 1));
+                        mutacionSwap.mutar(nuevaPoblacion.get(nuevaPoblacion.size() - 1));
                     }
                 }
             }
@@ -52,23 +207,18 @@ public class Main {
                     .min()
                     .orElse(Double.MAX_VALUE);
 
-            if (Double.isFinite(mejorAptitud)) {
-                historialAptitud.add(mejorAptitud);
-                System.out.println("Generación " + gen + " - Mejor aptitud: " + mejorAptitud);
-            } else {
-                System.out.println("Aptitud no válida en la generación " + gen);
-            }
-
+            historialAptitud.add(mejorAptitud);
+            outputArea.append("Generación " + gen + " - Mejor aptitud: " + mejorAptitud + "\n");
         }
         mostrarGrafico(historialAptitud);
-
-
     }
 
-    static List<Individuo> generarPoblacionInicial() {
+
+
+    static List<Individuo> generarPoblacionInicial(int tamPoblacion) {
         List<Individuo> poblacion = new ArrayList<>();
         Random rand = new Random();
-        for (int i = 0; i < TAM_POBLACION; i++) {
+        for (int i = 0; i < tamPoblacion; i++) {
             List<Producto> seleccion = new ArrayList<>();
             for (Producto p : productos) {
                 if (rand.nextBoolean()) seleccion.add(p);
@@ -76,104 +226,6 @@ public class Main {
             poblacion.add(new Individuo(seleccion));
         }
         return poblacion;
-    }
-
-    /*
-     * realizar varios torneos escogidos al azar de la poblacion
-     * el ganador del torneo (mayor actitud) es seleccionado para el cruzamiento
-     * */
-    static Individuo seleccionTorneo(List<Individuo> poblacion, int tamTorneo) {
-        Random random = new Random();
-        Individuo ganador = null;
-
-        for (int i = 0; i < tamTorneo; i++) {
-            Individuo candidato = poblacion.get(random.nextInt(poblacion.size()));
-            if (ganador == null || candidato.calcularAptitud() < ganador.calcularAptitud()) {
-                ganador = candidato;
-            }
-        }
-        return ganador;
-
-    }
-
-    /*
-    * los individuos con mayor aptitud (fitness) tienen una mayor probabilidad de ser seleccionados,
-    * similar a cómo en una ruleta las casillas más grandes tienen más probabilidad de ser seleccionadas.
-    * */
-    static Individuo seleccionRuleta(List<Individuo> poblacion) {
-        double sumaAptitud = poblacion.stream().mapToDouble(Individuo::calcularAptitud).sum();
-        double valorSeleccion = Math.random() * sumaAptitud;
-        double count = 0;
-        for(Individuo i : poblacion) {
-            count += i.calcularAptitud();
-            if (count >= valorSeleccion) {
-                return i;
-            }
-        }
-        return poblacion.get(poblacion.size() - 1);
-    }
-
-    /*
-    * combinar la información genética de dos individuos (padres) y generar uno o más descendientes
-    * se elige un punto de corte para dividir los cromosomas
-     * */
-    static Individuo crucePunto (Individuo padre, Individuo madre) {
-        Random random = new Random();
-        int maxPunto = Math.min(padre.productos.size(), madre.productos.size());
-
-        if (maxPunto == 0) {
-            return new Individuo(new ArrayList<>()); // Si no hay productos, devolver un individuo vacío
-        }
-
-        int punto = random.nextInt(maxPunto);
-        List<Producto> hijos = new ArrayList<>(padre.productos.subList(0, punto));
-        hijos.addAll(madre.productos.subList(punto, madre.productos.size()));
-        return new Individuo(hijos);
-    }
-
-    /*
-    * cada gen del descendiente se elige aleatoriamente de uno de los dos padres.
-    * */
-    static Individuo cruceUniforme (Individuo padre, Individuo madre) {
-        Random random = new Random();
-        List<Producto> hijos = new ArrayList<>();
-
-        int maxSize = Math.min(padre.productos.size(), madre.productos.size());
-
-        for (int i = 0; i < maxSize; i++) {
-            if (random.nextBoolean()) {
-                hijos.add(padre.productos.get(i)); // Tomar del padre
-            } else {
-                hijos.add(madre.productos.get(i)); // Tomar de la madre
-            }
-        }
-
-        return new Individuo(hijos);
-    }
-
-
-    /*
-    * introduce cambios aleatorios en los genes de un individuo para mantener la diversidad genética
-    * en la población y evitar la convergencia prematura hacia soluciones subóptimas
-    * */
-
-    static void mutacionBit(Individuo individuo) {
-        Random rand = new Random();
-        if (!individuo.productos.isEmpty()) {
-            int idx = rand.nextInt(individuo.productos.size());
-            individuo.productos.remove(idx);
-        }
-    }
-    /*
-    * intercambia dos elementos en la secuencia de un individuo, introduciendo diversidad genética en la población.
-    * */
-    static void mutacionSwap (Individuo individuo){
-        Random rand = new Random();
-        if(individuo.productos.size() > 1){
-            int idx1 = rand.nextInt(individuo.productos.size());
-            int idx2 = rand.nextInt(individuo.productos.size());
-            Collections.swap(individuo.productos, idx1, idx2);
-        }
     }
 
     static void mostrarGrafico(List<Double> aptitudes) {
@@ -205,7 +257,4 @@ public class Main {
         frame.pack();
         frame.setVisible(true);
     }
-
-
-
 }
